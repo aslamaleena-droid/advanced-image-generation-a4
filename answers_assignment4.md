@@ -82,4 +82,79 @@ y.backward()
 print("x.grad =", x.grad)  # tensor([7.])
 print("w.grad =", w.grad)  # tensor([4., 2.])
 
+Q8(a)
+For non-scalar outputs, backward() needs a scalar or an explicit gradient of the same shape as the output.
+Options:
+
+Reduce to a scalar (e.g., [ y.sum(),\ y.mean() ]), or
+
+Pass [ \text{grad\_output} ] matching y’s shape to y.backward(grad_output).
+
+Q8(b)
+Example with a vector output and provided gradient:
+
+import torch
+
+x = torch.tensor([2.0], requires_grad=True)       # shape [1]
+# Vector output y = [x^2, x]
+y = torch.stack([x**2, x])                        # shape [2]
+
+# Suppose final loss L = 4*(x**2) + 2*(x)  -> dL/dy = [4, 2]
+grad_y = torch.tensor([4.0, 2.0])
+
+y.backward(grad_y)
+
+print("x.grad =", x.grad)  # dL/dx = 4*(2x) + 2 = 8x + 2 -> at x=2: 18
+# x.grad = tensor([18.])
+
+
+Alternative (reduce to scalar first):
+
+import torch
+x = torch.tensor([2.0], requires_grad=True)
+loss = (torch.stack([x**2, x]) * torch.tensor([4.0, 2.0])).sum()
+loss.backward()
+print("x.grad =", x.grad)  # tensor([18.])
+
+
+Q9(a) Gradient accumulation
+PyTorch accumulates into [ p.grad ]. Zero grads before each backward pass.
+
+import torch
+
+w = torch.tensor([2.0], requires_grad=True)
+
+for step in range(2):
+    if w.grad is not None:
+        w.grad.zero_()              # clear old grads
+    loss = (w - 1).pow(2)           # simple example loss
+    loss.backward()
+    with torch.no_grad():           # apply an update safely
+        w -= 0.1 * w.grad
+
+
+Q9(b) detach() vs no_grad() vs requires_grad_(False) (avoid .data)
+
+[ \texttt{tensor.detach()} ]: returns a view that stops autograd history. Use to block gradient flow through a tensor.
+
+[ \texttt{with\ torch.no\_grad():} ]: context that disables grad recording inside its block (eval/inference or manual updates).
+
+[ \texttt{tensor.requires\_grad\_(False)} ]: permanently turns off grad tracking for that tensor going forward (e.g., freeze layers).
+
+Avoid [ \texttt{tensor.data} ]: can corrupt the graph; use detach()/no_grad() instead.
+
+Example (freeze backbone, train head safely):
+
+# Freeze backbone
+for p in backbone.parameters():
+    p.requires_grad_(False)
+
+# Forward (explicitly stop grads from flowing into backbone features)
+features = backbone(x).detach()
+out = head(features)
+
+loss = criterion(out, target)
+optimizer.zero_grad()
+loss.backward()        # grads for head only
+optimizer.step()
 
