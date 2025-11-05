@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from fastapi.responses import FileResponse, JSONResponse
 import os
 
@@ -10,3 +10,7 @@ def sample_ebm():
         if os.path.exists(path) and os.path.getsize(path) > 0:
             return FileResponse(path, media_type="image/png", filename="ebm.png")
     return JSONResponse({"ok": False, "note": "No EBM image found yet. After Langevin sampling, save a PNG to ebm.png."})
+
+@router.head("/sample/ebm")
+def head_ebm():
+    return Response(status_code=200)
