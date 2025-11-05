@@ -14,10 +14,9 @@ PE(t)[i] =
 
 ---
 
-**Q2. d = 8, t = 1 (max period = 10000)**  
-\[
-[\sin(1),\ \cos(0.1),\ \sin(0.01),\ \cos(0.001),\ \sin(0.0001),\ \cos(0.00001),\ \sin(0.000001),\ \cos(0.0000001)]
-\]
+**Q2. d = 8, t = 1 (max period = 10000)
+[ sin(1), cos(0.31622777), sin(0.1), cos(0.03162278), sin(0.01), cos(0.00316228), sin(0.001), cos(0.00031623) ]
+
 
 ---
 
@@ -69,18 +68,18 @@ By default, `requires_grad=False`. Gradients are only tracked when this flag is 
 If `w` does **not** have `requires_grad=True`, gradients for `w` will not be tracked → `w.grad = None`.
 
 **Q7(b)**  
-To compute gradients with respect to both `x` and `w`, use this code:
-```python
 import torch
 
 x = torch.tensor([2.0], requires_grad=True)
 w = torch.tensor([1.0, 3.0], requires_grad=True)
 
-y = w[0]*x**2 + w[1]*x
+# y = w0 * x^2 + w1 * x
+y = w[0] * x**2 + w[1] * x
 y.backward()
 
-print("x.grad =", x.grad)  # tensor([7.])
-print("w.grad =", w.grad)  # tensor([4., 2.])
+print("x.grad =", x.grad)  # tensor([7.])   -> dy/dx = 2*w0*x + w1 = 2*1*2 + 3 = 7
+print("w.grad =", w.grad)  # tensor([4., 2.]) -> dy/dw0 = x^2 = 4, dy/dw1 = x = 2
+
 
 Q8(a)
 For non-scalar outputs, backward() needs a scalar or an explicit gradient of the same shape as the output.
